@@ -1,0 +1,110 @@
+<h1>SF - Device (ESP32) speudo code</h1>
+
+<form id="sign">
+  <input id="relaynode" placeholder="relay node" value="http://localhost"> : 
+  <select name="port" id="port">
+    <option value="all">--All Peers--</option>
+    <option value="8763">8763</option>
+    <option value="8764">8764</option>
+    <option value="8765" selected="selected">8765</option>
+    <option value="8766">8766</option>
+  </select>
+  <br/>
+  <input id="connect" type="button" value="0. Connect">
+  Connected to RelayNode: <b id="relaynodeurl"></b><br/>
+
+  <h2>Device</h2>
+  Device Id  : <input id="deviceId" value="d103"></input><br/>
+  Device Key : <input id="deviceKey" value="103"><br/>
+  <!-- input id="register" type="button" value="1. Register" -->
+  <br/>
+  <input id="loadDevicePub" type="submit" value="1. Load Device"> <br/>
+</form>
+
+<!-- 
+  <ul id="c2dCommands"></ul>
+ -->
+ <ul id="d2cSignals"></ul>
+
+<form id="talk" style="display: none;">
+  Device Pub : 
+  <br/>
+  <b id="devicePub"></b>
+  <br/>
+  Sfinx Pub : <input id="sfPub" value="KEqlf4LGru2YF9FhkYGDtM7ZkZSDnzC936Hm1eLEmGI.DbYEDkeiL2K-cw0b7xr51HjkePIEIrmxPuA8YkAAez8"/>
+  <br/>
+  User sfKey : <textarea id="encKey">{"ct":"XX6WpABfF/LhdRFS6AlivfHwEGerkWPyQn/JdQvZ/LgRE5UdLf6gj8mtxfdoGMd1bdWSnJXmhW1Dx42/2KM9OwPSzdT9mwl8wgDCwowTLBY/ci3SCOSxF0d+c0ChZShsIQwEZxsjjKOwgAqY1GHatpUgrkZHDqwhGC4O4hF4lBH+Yo1167H97r3Zaj34Oa8rjrA54ec8wh0OG8S2F4m4nvCWkJMi3P5DeRRryyakK6axbCVISPLE6HwPKsBOhzf5K/mUtmzfzgAfxZtn6d+BGboVrCfnuwgIHiPtVdrff1vx6IZixioCqi3xr05qKq9EjJicyF/smhDvGB6mmycDTMatqHSMw7F3pCfoa5mDjO9i0osVyEvKaX+2zlmuMqkZZtEmtzIVk+N2j2IvfHypsVZ/LCJQQ0zO2RCpHoCMqvzliS8LhdCDXpJyyhNPslKcZv5uMkEa24MTXGs/3PpHJTKGuBRIlwZrWvJS20Iex1FzSZbhlOtq6izRuKckH7pYqK/v7xqIO18YpdyLkwbpe1jmBg92r8aPfadli70=","iv":"YTX17qx7iqgt6OLmXWdTiQ==","s":"7L4sgmr0FqY="}</textarea>
+  <br/>
+  <input id="decrypt" type="submit" value="2. Decrypt"> <br/>
+  
+</form>
+
+<!-- 
+  <script src="https://cdn.jsdelivr.net/npm/gun@0.9.993/examples/jquery.js"></script>
+ -->
+ <script src="./scripts/jquery.js"></script>
+ <script src="./scripts/gun.js"></script>
+ <script src="./scripts/sea.js"></script>
+ <script src="./scripts/sf.js"></script>
+ <script>
+ 
+
+$('#connect').on('click', function(e){
+  e.preventDefault();
+  var url = connectGun($('#relaynode').val(), $('#port').val());
+  $('#relaynodeurl').text(url);
+})
+
+//call back for gun.on('auth', showPub);
+async function showPub(data){
+    $('#sign').hide();
+    $('#talk').show();
+
+    log('Device '+device.is.alias+' authorized with pub ' + device.is.pub);
+
+    $('#devicePub').text(device.is.pub);
+  }
+
+//1a. Register Device 
+$('#register').on('click', function(e){
+  e.preventDefault();
+  RegisterDevice($('#deviceId').val(), $('#deviceKey').val());
+})
+
+//1b. Load DevicePub
+$('#loadDevicePub').on('click', function(e){
+  e.preventDefault();
+  AuthDevice($('#deviceId').val(), $('#deviceKey').val());
+})
+
+//2. Decrypt Key 
+$('#decrypt').on('click', async function(e){
+  e.preventDefault();  
+
+  var sfPub = $('#sfPub').val();
+  
+  var sfUser = await gun.user(sfPub);
+  //alert(sfUser.epub);
+
+  var sec = await Gun.SEA.secret(sfUser.epub, device.pair()); // Diffie-Hellman
+  if(!sec) throw 'Failed to generate encrypted keys for device with sfinx pub key : ' + sea.err;
+
+  var keyToDecrypt = 'SEA' + $('#encKey').text();
+
+  var decKey = await Gun.SEA.decrypt(keyToDecrypt, sec).then();
+  alert('preHash: ' + decKey.prevHash + '\n userPub: ' + decKey.userPub + '\n devicePub: ' + decKey.devicePub);
+
+})
+
+
+function updateDevicePub(auth){
+  var devicePub = device.is.pub;
+  console.log('Device Authenticated with Pub key = ' + devicePub);
+
+  $('#devicePub').val(pub);
+
+}
+
+
+
+</script>
