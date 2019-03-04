@@ -21,9 +21,6 @@
   <input id="loadDevicePub" type="submit" value="1. Load Device"> <br/>
 </form>
 
-<!-- 
-  <ul id="c2dCommands"></ul>
- -->
  <ul id="d2cSignals"></ul>
 
 <form id="talk" style="display: none;">
@@ -39,9 +36,7 @@
   
 </form>
 
-<!-- 
-  <script src="https://cdn.jsdelivr.net/npm/gun@0.9.993/examples/jquery.js"></script>
- -->
+
  <script src="./scripts/jquery.js"></script>
  <script src="./scripts/gun.js"></script>
  <script src="./scripts/sea.js"></script>
@@ -81,18 +76,73 @@ $('#loadDevicePub').on('click', function(e){
 $('#decrypt').on('click', async function(e){
   e.preventDefault();  
 
-  var sfPub = $('#sfPub').val();
+  // hard coded constants in the device
+  const vendorPub = 'macsp'; // will be hard coded in the device
+  const sfinxPub = 'KEqlf4LGru2YF9FhkYGDtM7ZkZSDnzC936Hm1eLEmGI.DbYEDkeiL2K-cw0b7xr51HjkePIEIrmxPuA8YkAAez8';
+  const devicePub = device.is.pub; // will be hard coded in the device as well
+
+  // in memory array of previous hashes
+  var prevHashes = ['8b17269f0e0f603ca47deca9ef09914061ac56b4a97b18ebdccced9efdf15852'];
+
+  try {
+    var sfPub = $('#sfPub').val();
   
-  var sfUser = await gun.user(sfPub);
-  //alert(sfUser.epub);
+    var sfUser = await gun.user(sfPub);
+    //alert(sfUser.epub);
 
-  var sec = await Gun.SEA.secret(sfUser.epub, device.pair()); // Diffie-Hellman
-  if(!sec) throw 'Failed to generate encrypted keys for device with sfinx pub key : ' + sea.err;
+    var sec = await Gun.SEA.secret(sfUser.epub, device.pair()); // Diffie-Hellman
+    if(!sec) throw 'Failed to generate encrypted keys for device with sfinx pub key : ' + sea.err;
 
-  var keyToDecrypt = 'SEA' + $('#encKey').text();
+    var keyToDecrypt = 'SEA' + $('#encKey').text();
 
-  var decKey = await Gun.SEA.decrypt(keyToDecrypt, sec).then();
-  alert('preHash: ' + decKey.prevHash + '\n userPub: ' + decKey.userPub + '\n devicePub: ' + decKey.devicePub);
+    var decKey = await Gun.SEA.decrypt(keyToDecrypt, sec).then();
+    alert('STARTING VALIDATING KEY-CONTENT: \n preHash: ' + decKey.prevHash + '\n userPub: ' + decKey.userPub + '\n devicePub: ' + decKey.devicePub);
+
+    // check prevHash
+    if(!prevHashes.includes(decKey.prevHash)) throw 'This is not a valid key: unknown prevHash';
+
+    // check devicePub
+    if(decKey.devicePub != devicePub) throw 'This is not a valid key: invalid devicePub';
+
+    // vendorPub
+    if(decKey.vendorPub != vendorPub) throw 'This is not a valid key: invalid vendorPub';
+
+    // check userPub 
+    if(!decKey.userPub) throw 'This is not a valid key: missing userPub';
+
+    // check key
+    if(!decKey.key) throw 'This is not a valid key: missing unique key';
+
+    // check if 'temp' userRole
+    if(!decKey.userRole == 'temp') {
+      // TODO: validate if current time is in between decKey.from and decKey.to
+    }
+
+    // OPEN or CLOSE the relay
+    // TODO: call actuator relay via GPIO
+
+    // calculate new hash
+    /*
+    //TODO: 
+    const hash = crypto.createHash('sha256');
+    hash.update(JSON.stringify(decKey));
+    var newHash = hash.digest('hex');
+    log('Calculated prevKey hash: ' + newHash);
+    */
+    var newHash = 'blablabla';
+
+
+    // replace old hash with new re-calculated hash
+    var index = prevHashes.indexOf(decKey.prevHash);
+    prevHashes.splice(index, 1);
+    prevHashes.push(newHash);
+
+    alert('All set to receive the next encKey !');
+
+  } catch (error) {
+    log('ERROR: ' + error);
+    alert('ERROR: '+ error);    
+  }
 
 })
 
