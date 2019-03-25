@@ -1,7 +1,7 @@
 <h1>SF - Device (ESP32) speudo code</h1>
 
 <form id="sign">
-  <input id="relaynode" placeholder="relay node" value="http://51.136.25.91"> : 
+  <input id="relaynode" placeholder="relay node" value="http://137.117.197.174"> : 
   <select name="port" id="port">
     <option value="all">--All Peers--</option>
     <option value="8763">8763</option>
@@ -78,6 +78,7 @@ $('#decrypt').on('click', async function(e){
   e.preventDefault();  
 
   // hard coded constants in the device :
+  // sf_ePub
   // deviceId
   // deviceKey
   // devicePub & ePub ?
@@ -89,12 +90,11 @@ $('#decrypt').on('click', async function(e){
   var prevHashes = ['8b17269f0e0f603ca47deca9ef09914061ac56b4a97b18ebdccced9efdf15852'];
 
   try {
-    var sfPub = $('#sfPub').val(); // will be hard coded in the device chipset
-  
+    var sfPub = $('#sfPub').val();   
     var sfUser = await gun.user(sfPub); // will be passed as parameter from the user request via BLE (later in v1: the user will sign & encypt the sfinx-key, to prove who he is)
-    //alert(sfUser.epub);
+    var sf_ePub = sfUser.epub; // will be hard coded in the device chipset !!!
 
-    var sec = await Gun.SEA.secret(sfUser.epub, device.pair()); // Diffie-Hellman
+    var sec = await Gun.SEA.secret(sf_ePub, device.pair()); // Diffie-Hellman
     if(!sec) throw 'Failed to generate encrypted keys for device with sfinx pub key : ' + sea.err;
 
     var keyToDecrypt = 'SEA' + $('#encKey').text();
