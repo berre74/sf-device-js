@@ -1,9 +1,24 @@
 <h1>SF - Device (ESP32) speudo code</h1>
 
 <form id="talk">
-  User sfKey : <textarea id="encKey">{"ct":"jB95GBbLzAlvGrwgDLjNGMUDkWhyAsY6kMGat0Mx7JR53bh+CJaDIf3aplCT6r2xEY6zCLMTQlnkKtr9XlxYERxXG+H3dl4N8EL2fZ9RmAw5z1RGbwCYxKC6H2R8zOj6oGcjAH9g9+1rFyfcrsGqsBwxhrCrcAc4niVJLfAbmQ/ehx8SVDIN6R+c+ekVlmfUx4fuo4wewgJU+Iz3Wi6F1hSXyvZcHIg2oDsUUaiT7kWt7BaCXE6hAsYYdjE5s1GyNAhL70MsKfgR8UzyisbFjxr5dXhJ4kRnE44pQCseC6M07w3OcN3ukqBgIw/W0LfG311H8HAweOBwzLrdNMFwEZKSipfYGi22xNit7StCQgVPa+T0ZMzsl5f2Wd74etjXObH9Hixz3hCXw4S/ccH67IgryP4ZPmvVK4+rAkXKtZBITaEJMmOED8dfuzJNmh6KQReS/9gpN2SgDObZCo9NMIyz076wFyFtOrAoWKjHD69yltmor7RGKGoJyTpTy+APJCQKMzK3Ec0jLKHIjnO2LS5wyc+8To85LoRlTvU=","iv":"C/8wRNmdNKNhKP14eLZ++g==","s":"8/6IMVzdwqE="}</textarea>
+  User sfKey : <br/>
+  <textarea id="encKey" rows="10" cols="80">{"ct":"jB95GBbLzAlvGrwgDLjNGMUDkWhyAsY6kMGat0Mx7JR53bh+CJaDIf3aplCT6r2xEY6zCLMTQlnkKtr9XlxYERxXG+H3dl4N8EL2fZ9RmAw5z1RGbwCYxKC6H2R8zOj6oGcjAH9g9+1rFyfcrsGqsBwxhrCrcAc4niVJLfAbmQ/ehx8SVDIN6R+c+ekVlmfUx4fuo4wewgJU+Iz3Wi6F1hSXyvZcHIg2oDsUUaiT7kWt7BaCXE6hAsYYdjE5s1GyNAhL70MsKfgR8UzyisbFjxr5dXhJ4kRnE44pQCseC6M07w3OcN3ukqBgIw/W0LfG311H8HAweOBwzLrdNMFwEZKSipfYGi22xNit7StCQgVPa+T0ZMzsl5f2Wd74etjXObH9Hixz3hCXw4S/ccH67IgryP4ZPmvVK4+rAkXKtZBITaEJMmOED8dfuzJNmh6KQReS/9gpN2SgDObZCo9NMIyz076wFyFtOrAoWKjHD69yltmor7RGKGoJyTpTy+APJCQKMzK3Ec0jLKHIjnO2LS5wyc+8To85LoRlTvU=","iv":"C/8wRNmdNKNhKP14eLZ++g==","s":"8/6IMVzdwqE="}</textarea>
   <br/>
   <input id="decrypt" type="submit" value="Decrypt"> <br/>  
+  <p/>
+
+  ct :
+  <input id="ct" type="input" value=""> <br/>  
+
+  iv :
+  <input id="iv" type="input" value=""> <br/>  
+
+  s :
+  <input id="s" type="input" value="Decrypt"> <br/>  
+
+  <p/>
+  Decrypted Key : <br/>
+  <textarea id="decKey" rows="10" cols="80"></textarea> <br/>  
 </form>
 
  <script src="./scripts/jquery.js"></script>
@@ -27,13 +42,24 @@ $('#decrypt').on('click', async function(e){
 
   try {
 
-    var keyToDecrypt = 'SEA' + $('#encKey').val();
+    $('#ct').val('');
+    $('#iv').val('');
+    $('#s').val('');
+    $('#decKey').text('');
 
-    var decKey = await Gun.SEA.decrypt(keyToDecrypt, sec).then();
-    alert('STARTING VALIDATING KEY-CONTENT: \n preHash: ' + decKey.prevHash + '\n userPub: ' + decKey.userPub + '\n devicePub: ' + decKey.devicePub);
+    var keyToDecrypt = $('#encKey').val();
+    var keyToDecryptObject = JSON.parse(keyToDecrypt);
+    $('#ct').val(keyToDecryptObject.ct);
+    $('#iv').val(keyToDecryptObject.iv);
+    $('#s').val(keyToDecryptObject.s);
+
+    var decKey = await Gun.SEA.decrypt('SEA' + keyToDecrypt, sec).then();
+    $('#decKey').text(JSON.stringify(decKey));
+
+    console.log('STARTING VALIDATING KEY-CONTENT: \n prevHash: ' + decKey.prevHash + '\n userPub: ' + decKey.userPub + '\n devicePub: ' + decKey.devicePub);
 
     // check prevHash
-    if(!prevHashes.includes(decKey.prevHash)) throw 'This is not a valid key: unknown prevHash';
+    if(!prevHashes.includes(decKey.prevHash)) console.error('Ths might be an expired key: unknown prevHash');
 
     // check devicePub
     if(decKey.devicePub != devicePub) throw 'This is not a valid key: invalid devicePub';
@@ -75,7 +101,7 @@ $('#decrypt').on('click', async function(e){
     prevHashes.splice(index, 1);
     prevHashes.push(newHash);
 
-    alert('All set to receive the next sfKey !');
+    console.log('Sfinx key is validated, chip is ready to receive the next sfKey !');
 
   } catch (error) {
     log('ERROR: ' + error);
