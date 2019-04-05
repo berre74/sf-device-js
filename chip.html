@@ -1,89 +1,136 @@
-<h1>SF - Device (ESP32) speudo code</h1>
+<html>
+  <head>
+    <title>SF - Device (ESP32) speudo code</title>
+  </head>
+  <body>
+      <script src="./scripts/jquery.js"></script>
+      <script src="./scripts/gun.js"></script>
+      <script src="./scripts/sea.js"></script>
+      <script type="text/javascript">
 
-<form id="talk">
-  User sfKey : <textarea id="encKey">{"ct":"jB95GBbLzAlvGrwgDLjNGMUDkWhyAsY6kMGat0Mx7JR53bh+CJaDIf3aplCT6r2xEY6zCLMTQlnkKtr9XlxYERxXG+H3dl4N8EL2fZ9RmAw5z1RGbwCYxKC6H2R8zOj6oGcjAH9g9+1rFyfcrsGqsBwxhrCrcAc4niVJLfAbmQ/ehx8SVDIN6R+c+ekVlmfUx4fuo4wewgJU+Iz3Wi6F1hSXyvZcHIg2oDsUUaiT7kWt7BaCXE6hAsYYdjE5s1GyNAhL70MsKfgR8UzyisbFjxr5dXhJ4kRnE44pQCseC6M07w3OcN3ukqBgIw/W0LfG311H8HAweOBwzLrdNMFwEZKSipfYGi22xNit7StCQgVPa+T0ZMzsl5f2Wd74etjXObH9Hixz3hCXw4S/ccH67IgryP4ZPmvVK4+rAkXKtZBITaEJMmOED8dfuzJNmh6KQReS/9gpN2SgDObZCo9NMIyz076wFyFtOrAoWKjHD69yltmor7RGKGoJyTpTy+APJCQKMzK3Ec0jLKHIjnO2LS5wyc+8To85LoRlTvU=","iv":"C/8wRNmdNKNhKP14eLZ++g==","s":"8/6IMVzdwqE="}</textarea>
-  <br/>
-  <input id="decrypt" type="submit" value="Decrypt"> <br/>  
-</form>
+      function clearResult(e){   
+         $('#ct').val('');
+         $('#iv').val('');
+         $('#s').val('');
+         $('#decKey').text('');
+      }
 
- <script src="./scripts/jquery.js"></script>
- <script src="./scripts/gun.js"></script>
- <script src="./scripts/sea.js"></script>
- <script src="./scripts/sf.js"></script>
- <script>
+      $( document ).ready(function() {
+          console.log( "ready!" );
 
-// Decrypt Key 
-$('#decrypt').on('click', async function(e){
-  e.preventDefault();  
+          $('#clearBtn').on('click', async function(e){
+        e.preventDefault();  
+        clearResult();
+      });
+     
+       // Decrypt Key 
+       $('#decryptBtn').on('click', async function(e){
+         e.preventDefault();  
+     
+         clearResult();
+     
+         // hard coded constants in the device 
+         const sec = 'ZrvcwsWtZmqunpWjl-L_RSgueq7PIwPIIPn1WhArTT8';
+     
+         const devicePub = 'qlW5jmPL1N8sraAdZCmnOheGGVpQ_RtKpO5Pt2STjrU.Fm1PxlwAJF9R4Zjx7TK4QRgfPtX3XVbeA60C6taee6E';
+         const vendorPub = 'macsp';
+     
+         // in memory array of previous hashes
+         var prevHashes = ['8b17269f0e0f603ca47deca9ef09914061ac56b4a97b18ebdccced9efdf15852', '6583ab354ea291b5fd4ebbd0294f05e3d12a5b0aa8b4cb902644955a6d8486af'];
+     
+         try {
+     
+           var keyToDecrypt = $('#encKey').val();
+           var keyToDecryptObject = JSON.parse(keyToDecrypt);
+           $('#ct').val(keyToDecryptObject.ct);
+           $('#iv').val(keyToDecryptObject.iv);
+           $('#s').val(keyToDecryptObject.s);
+     
+           var decKey = await Gun.SEA.decrypt('SEA' + keyToDecrypt, sec).then();
+           $('#decKey').text(JSON.stringify(decKey));
+     
+           console.log('STARTING VALIDATING KEY-CONTENT: \n prevHash: ' + decKey.prevHash + '\n userPub: ' + decKey.userPub + '\n devicePub: ' + decKey.devicePub);
+     
+           // check prevHash
+           if(!prevHashes.includes(decKey.prevHash)) console.error('Ths might be an expired key: unknown prevHash');
+     
+           // check devicePub
+           if(decKey.devicePub != devicePub) throw 'This is not a valid key: invalid devicePub';
+     
+           // vendorPub
+           if(decKey.vendorPub != vendorPub) throw 'This is not a valid key: invalid vendorPub';
+     
+           // check userPub 
+           if(!decKey.userPub) throw 'This is not a valid key: missing userPub'
+           else {
+             //TODO: in v1 the user will sign & encrypt the sfinx-key, we have to check if the sfinx-key is mentioned for this user 
+             //if(decKey.userPub != userPub) throw 'This key is not from the user who send it';
+           }
+     
+           // check key
+           if(!decKey.key) throw 'This is not a valid key: missing unique key';
+     
+           // check if 'temp' userRole
+           if(!decKey.userRole == 'temp') {
+             // TODO: validate if current time is in between decKey.from and decKey.to
+           }
+     
+           // OPEN or CLOSE the relay
+           // TODO: call actuator relay via GPIO
+     
+           // calculate new hash
+           /*
+           //TODO: 
+           const hash = crypto.createHash('sha256');
+           hash.update(JSON.stringify(decKey));
+           var newHash = hash.digest('hex');
+           log('Calculated prevKey hash: ' + newHash);
+           */
+           var newHash = 'blablabla';
+     
+     
+           // replace old hash with new re-calculated hash
+           var index = prevHashes.indexOf(decKey.prevHash);
+           prevHashes.splice(index, 1);
+           prevHashes.push(newHash);
+     
+           console.log('Sfinx key is validated, chip is ready to receive the next sfKey !');
+     
+         } catch (error) {
+           console.log('ERROR: ' + error);
+           alert('ERROR: '+ error);    
+         }
+     
+       });
 
-  // hard coded constants in the device 
-  const sec = 'ZrvcwsWtZmqunpWjl-L_RSgueq7PIwPIIPn1WhArTT8';
+      });    
+     
+      </script>
 
-  const devicePub = 'qlW5jmPL1N8sraAdZCmnOheGGVpQ_RtKpO5Pt2STjrU.Fm1PxlwAJF9R4Zjx7TK4QRgfPtX3XVbeA60C6taee6E';
-  const vendorPub = 'macsp';
+      <h1>SF - Device (ESP32) speudo code</h1>
 
-  // in memory array of previous hashes
-  var prevHashes = ['8b17269f0e0f603ca47deca9ef09914061ac56b4a97b18ebdccced9efdf15852', '6583ab354ea291b5fd4ebbd0294f05e3d12a5b0aa8b4cb902644955a6d8486af'];
+      <form id="talk">
+        User sfKey : <br/>
+        <textarea id="encKey" rows="10" cols="80">{"ct":"jB95GBbLzAlvGrwgDLjNGMUDkWhyAsY6kMGat0Mx7JR53bh+CJaDIf3aplCT6r2xEY6zCLMTQlnkKtr9XlxYERxXG+H3dl4N8EL2fZ9RmAw5z1RGbwCYxKC6H2R8zOj6oGcjAH9g9+1rFyfcrsGqsBwxhrCrcAc4niVJLfAbmQ/ehx8SVDIN6R+c+ekVlmfUx4fuo4wewgJU+Iz3Wi6F1hSXyvZcHIg2oDsUUaiT7kWt7BaCXE6hAsYYdjE5s1GyNAhL70MsKfgR8UzyisbFjxr5dXhJ4kRnE44pQCseC6M07w3OcN3ukqBgIw/W0LfG311H8HAweOBwzLrdNMFwEZKSipfYGi22xNit7StCQgVPa+T0ZMzsl5f2Wd74etjXObH9Hixz3hCXw4S/ccH67IgryP4ZPmvVK4+rAkXKtZBITaEJMmOED8dfuzJNmh6KQReS/9gpN2SgDObZCo9NMIyz076wFyFtOrAoWKjHD69yltmor7RGKGoJyTpTy+APJCQKMzK3Ec0jLKHIjnO2LS5wyc+8To85LoRlTvU=","iv":"C/8wRNmdNKNhKP14eLZ++g==","s":"8/6IMVzdwqE="}</textarea>
+        <br/>
+      
+        <input id="clearBtn" type="button" value="Clear" /> <br/>  
+        <input id="decryptBtn" type="button" value="Decrypt" /> <br/>  
+        <p/>
+      
+        ct :
+        <input id="ct" type="input" value=""> <br/>  
+      
+        iv :
+        <input id="iv" type="input" value=""> <br/>  
+      
+        s :
+        <input id="s" type="input" value="Decrypt"> <br/>  
+      
+        <p/>
+        Decrypted Key : <br/>
+        <textarea id="decKey" rows="10" cols="80"></textarea> <br/>  
+      </form>
 
-  try {
-
-    var keyToDecrypt = 'SEA' + $('#encKey').val();
-
-    var decKey = await Gun.SEA.decrypt(keyToDecrypt, sec).then();
-    alert('STARTING VALIDATING KEY-CONTENT: \n preHash: ' + decKey.prevHash + '\n userPub: ' + decKey.userPub + '\n devicePub: ' + decKey.devicePub);
-
-    // check prevHash
-    if(!prevHashes.includes(decKey.prevHash)) throw 'This is not a valid key: unknown prevHash';
-
-    // check devicePub
-    if(decKey.devicePub != devicePub) throw 'This is not a valid key: invalid devicePub';
-
-    // vendorPub
-    if(decKey.vendorPub != vendorPub) throw 'This is not a valid key: invalid vendorPub';
-
-    // check userPub 
-    if(!decKey.userPub) throw 'This is not a valid key: missing userPub'
-    else {
-      //TODO: in v1 the user will sign & encrypt the sfinx-key, we have to check if the sfinx-key is mentioned for this user 
-      //if(decKey.userPub != userPub) throw 'This key is not from the user who send it';
-    }
-
-    // check key
-    if(!decKey.key) throw 'This is not a valid key: missing unique key';
-
-    // check if 'temp' userRole
-    if(!decKey.userRole == 'temp') {
-      // TODO: validate if current time is in between decKey.from and decKey.to
-    }
-
-    // OPEN or CLOSE the relay
-    // TODO: call actuator relay via GPIO
-
-    // calculate new hash
-    /*
-    //TODO: 
-    const hash = crypto.createHash('sha256');
-    hash.update(JSON.stringify(decKey));
-    var newHash = hash.digest('hex');
-    log('Calculated prevKey hash: ' + newHash);
-    */
-    var newHash = 'blablabla';
-
-
-    // replace old hash with new re-calculated hash
-    var index = prevHashes.indexOf(decKey.prevHash);
-    prevHashes.splice(index, 1);
-    prevHashes.push(newHash);
-
-    alert('All set to receive the next sfKey !');
-
-  } catch (error) {
-    log('ERROR: ' + error);
-    alert('ERROR: '+ error);    
-  }
-
-})
-
-//jB95GBbLzAlvGrwgDLjNGMUDkWhyAsY6kMGat0Mx7JR53bh+CJaDIf3aplCT6r2xEY6zCLMTQlnkKtr9XlxYERxXG+H3dl4N8EL2fZ9RmAw5z1RGbwCYxKC6H2R8zOj6oGcjAH9g9+1rFyfcrsGqsBwxhrCrcAc4niVJLfAbmQ/ehx8SVDIN6R+c+ekVlmfUx4fuo4wewgJU+Iz3Wi6F1hSXyvZcHIg2oDsUUaiT7kWt7BaCXE6hAsYYdjE5s1GyNAhL70MsKfgR8UzyisbFjxr5dXhJ4kRnE44pQCseC6M07w3OcN3ukqBgIw/W0LfG311H8HAweOBwzLrdNMFwEZKSipfYGi22xNit7StCQgVPa+T0ZMzsl5f2Wd74etjXObH9Hixz3hCXw4S/ccH67IgryP4ZPmvVK4+rAkXKtZBITaEJMmOED8dfuzJNmh6KQReS/9gpN2SgDObZCo9NMIyz076wFyFtOrAoWKjHD69yltmor7RGKGoJyTpTy+APJCQKMzK3Ec0jLKHIjnO2LS5wyc+8To85LoRlTvU=
-
-</script>
+    </body>
+</html>
