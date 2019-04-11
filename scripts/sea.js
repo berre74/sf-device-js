@@ -484,6 +484,7 @@
     var shim = USE('./shim');
     var sha256hash = USE('./sha256');
 
+    //Thomas: this is the function that derives the AES key
     const importGen = async (key, salt, opt) => {
       //const combo = shim.Buffer.concat([shim.Buffer.from(key, 'utf8'), salt || shim.random(8)]).toString('utf8') // old
       var opt = opt || {};
@@ -540,6 +541,7 @@
     var S = USE('./settings');
     var aeskey = USE('./aeskey');
 
+    //Thomas: this is the function when you hit the decrypt button
     SEA.decrypt = SEA.decrypt || (async (data, pair, cb, opt) => { try {
       opt = opt || {};
       var key = (pair||opt).epriv || pair;
