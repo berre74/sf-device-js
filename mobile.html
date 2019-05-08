@@ -72,6 +72,13 @@ $('#up').on('click', function(){
   var url = connectGun($('#relaynode').val(), $('#port').val());
   $('#relaynodeurl').text(url);
 
+  /*
+  // Sample: Check if User Account exist
+  var gunOwner = gun.user(vendor.ownerPub);
+  var who = await gunOwner.then();
+  log.log('Owner gun account found: ' + who.alias);
+  */
+
   user.create($('#alias').val(), $('#pass').val(), login);
 });
 

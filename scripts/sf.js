@@ -75,11 +75,11 @@ Gun.on('opt', function (ctx) {
 
       // put notif on gun (GdprData/serviceProvPub)
       log('Put shareNotif on gun');
-      var shareNotif = { userPub: userPub, gdprDataType: 'Claims', deviceId: deviceId }
+      var shareNotif = { userPub: userPub, gdprDataType: 'Claim', deviceId: deviceId }
       gun.get('GdprData').get(serviceProvPub).put(shareNotif);
 
       // put claim on user profile
-      var claim = {  gdprDataType: 'Claims', mobileId: mobileId, deviceId: deviceId, devicePac: devicePac }
+      var claim = {  gdprDataType: 'Claim', mobileId: mobileId, deviceId: deviceId, devicePac: devicePac }
       log('Put enClaim on user');
       var sec = await Gun.SEA.secret(device.epub, user.pair()); // Diffie-Hellman
       var encClaim = await Gun.SEA.encrypt(claim, sec);
@@ -161,7 +161,7 @@ Gun.on('opt', function (ctx) {
 
       var userRole = { gdprDataType: 'AssignUserRole', 
       deviceId: deviceId, devicePac: devicePac, 
-      toUserPub: toUserPub, userRole: 'delete'}
+      toUserPub: toUserPub, userRole: 'del'}
 
       log('Put encUserRole on user');
       var sec = await Gun.SEA.secret(device.epub, user.pair()); // Diffie-Hellman
@@ -190,6 +190,20 @@ const ListenForNewPac = async function(devicePub, userPub){
     $('#devicePac').val(newPAC);
   });
 
+  // wait for new sfinxKey
+  /*
+  dev.get(userPub).get('mobile01').on(async function(encSfinxKey){
+    log('encSfinxKey received: ' + encSfinxKey);
+  });
+  */
+  for (let index = 0; index < 5; index++) {
+    dev.get(userPub).get('mobile01').get('Key_' + index).on(async function(encSfinxKey, slot){
+      log('encSfinxKey received in ' + slot);
+    });
+  }
+  log('Listening for sfinxKeys ...');
+
+  /*
   // wait for new adminKey
   dev.get(userPub).get('AdminKey').on(async function(encAdminKey){
     var sec = await Gun.SEA.secret(devId.epub, user.pair()); // Diffie-Hellman
@@ -197,6 +211,7 @@ const ListenForNewPac = async function(devicePub, userPub){
     log('Received new AdminKey: ' + newAdminKey);
     $('#adminKey').val(newAdminKey);
   });
+  */
   
 }
 
