@@ -1,4 +1,4 @@
-<h1>Sfinx ÐApps - Home</h1>
+<h1>Sfinx ÐApp - TestPage</h1>
 
 <form id="sign">
   <input id="relaynode" placeholder="relay node" value="http://137.117.197.174"> : 
@@ -27,7 +27,6 @@
   Device Id  : <i id="deviceId"></i><br/>
   Device Pub : <input id="devicePub" value="qlW5jmPL1N8sraAdZCmnOheGGVpQ_RtKpO5Pt2STjrU.Fm1PxlwAJF9R4Zjx7TK4QRgfPtX3XVbeA60C6taee6E"/> <br/>
   Device PAC : <input id="devicePac" value=""/> <br/>
-  Device AdminKey : <input id="adminKey" value=""/> <br/>
   <input id="loadDevicePub" type="button" value="1. Load Device"/> <br/>
   <input id="claim" type="button" value="2. Claim"/> <br/>
 
@@ -181,7 +180,6 @@ $('#assignUserRole').on('click', async function(e){
     user.is.pub, 
     $('#mobileId').val(), 
     $('#devicePac').val(), 
-    $('#adminKey').val(), 
     $('#to').val(), 
     $('#userRole').val(),
     $('#userRoleFrom').val(),

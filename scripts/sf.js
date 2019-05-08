@@ -132,14 +132,14 @@ Gun.on('opt', function (ctx) {
 
   }
 
-  async function AssignUserRole(serviceProvPub, deviceId, devicePub, userPub, mobileId, devicePac, adminKey, 
+  async function AssignUserRole(serviceProvPub, deviceId, devicePub, userPub, mobileId, devicePac, 
     toUserPub, userRole, from, to){
 
     try {
       //TODO: check if userRole == 'Admin' || 'User'
 
       var userRole = { gdprDataType: 'AssignUserRole', 
-      serviceProvPub: serviceProvPub, devicePub: devicePub, deviceId: deviceId, devicePac: devicePac, adminKey: adminKey,
+      serviceProvPub: serviceProvPub, devicePub: devicePub, deviceId: deviceId, devicePac: devicePac,
       toUserPub: toUserPub, userRole: userRole, 
       from: from, to: to }
     
@@ -186,33 +186,18 @@ const ListenForNewPac = async function(devicePub, userPub){
   dev.get(userPub).get('PAC').on(async function(encPAC){
     var sec = await Gun.SEA.secret(devId.epub, user.pair()); // Diffie-Hellman
     var newPAC = await Gun.SEA.decrypt(encPAC, sec);
-    log('Received new PAC: ' + newPAC);
+    if(newPAC)log('Received new PAC: ' + newPAC)
+    else log('No PAC received');
     $('#devicePac').val(newPAC);
   });
 
   // wait for new sfinxKey
-  /*
-  dev.get(userPub).get('mobile01').on(async function(encSfinxKey){
-    log('encSfinxKey received: ' + encSfinxKey);
-  });
-  */
   for (let index = 0; index < 5; index++) {
     dev.get(userPub).get('mobile01').get('Key_' + index).on(async function(encSfinxKey, slot){
-      log('encSfinxKey received in ' + slot);
+      if(encSfinxKey) log('New encrypted SfinxKey received in ' + slot);
+      else log('encrypted SfinxKey REMOVED from ' + slot);
     });
-  }
-  log('Listening for sfinxKeys ...');
-
-  /*
-  // wait for new adminKey
-  dev.get(userPub).get('AdminKey').on(async function(encAdminKey){
-    var sec = await Gun.SEA.secret(devId.epub, user.pair()); // Diffie-Hellman
-    var newAdminKey = await Gun.SEA.decrypt(encAdminKey, sec);
-    log('Received new AdminKey: ' + newAdminKey);
-    $('#adminKey').val(newAdminKey);
-  });
-  */
-  
+  }  
 }
 
 /*
