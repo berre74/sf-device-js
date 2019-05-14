@@ -132,14 +132,36 @@ Gun.on('opt', function (ctx) {
 
   }
 
+  async function SetGdprPubSub(serviceProvPub, deviceId, devicePub, 
+    toServiceProvPub, gdprType){
+
+    try {
+      
+      var gdprPubSub = { gdprDataType: 'gdprPubSub', 
+      serviceProvPub: serviceProvPub, devicePub: devicePub, deviceId: deviceId, 
+      toServiceProvPub: toServiceProvPub, gdprType: gdprType }
+    
+      log('Put gdprPubSub on user');
+      var sec = await Gun.SEA.secret(device.epub, user.pair()); // Diffie-Hellman
+      var encGdprPubSub = await Gun.SEA.encrypt(gdprPubSub, sec);
+      user.get(serviceProvPub).get(deviceId).put(encGdprPubSub); 
+
+      log('gdprPubSub sent');
+
+    } catch (error) {
+      console.error('Failed to setGdprPubSub: ' + error);  
+    }
+
+  }
+
+
   async function AssignUserRole(serviceProvPub, deviceId, devicePub, userPub, mobileId, devicePac, 
     toUserPub, userRole, from, to){
 
     try {
-      //TODO: check if userRole == 'Admin' || 'User'
 
       var userRole = { gdprDataType: 'AssignUserRole', 
-      serviceProvPub: serviceProvPub, devicePub: devicePub, deviceId: deviceId, devicePac: devicePac,
+      devicePub: devicePub, deviceId: deviceId, devicePac: devicePac,
       toUserPub: toUserPub, userRole: userRole, 
       from: from, to: to }
     
@@ -191,7 +213,7 @@ const ListenForNewPac = async function(devicePub, userPub){
     $('#devicePac').val(newPAC);
   });
 
-  // wait for new sfinxKey
+  // wait for new sfinxKeys
   for (let index = 0; index < 5; index++) {
     dev.get(userPub).get('mobile01').get('Key_' + index).on(async function(encSfinxKey, slot){
       if(encSfinxKey) log('New encrypted SfinxKey received in ' + slot);

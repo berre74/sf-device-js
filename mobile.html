@@ -25,7 +25,7 @@
 
   <h2>Device</h2>
   Device Id  : <i id="deviceId"></i><br/>
-  Device Pub : <input id="devicePub" value="qlW5jmPL1N8sraAdZCmnOheGGVpQ_RtKpO5Pt2STjrU.Fm1PxlwAJF9R4Zjx7TK4QRgfPtX3XVbeA60C6taee6E"/> <br/>
+  Device Pub : <input id="devicePub" value="P77lHPibkrCuVmpECUZa8RdgNjNkQK8FU6vAJiCH-OM.HMX0JVthhkxPAPCyxmqyjEPzVSzBni5uJwrJ7hT4s0Y"/> <br/>
   Device PAC : <input id="devicePac" value=""/> <br/>
   <input id="loadDevicePub" type="button" value="1. Load Device"/> <br/>
   <input id="claim" type="button" value="2. Claim"/> <br/>
@@ -42,6 +42,10 @@
   <input id="what" placeholder="private message">
   <input id="send" type="submit" value="send">
   <p>Your public key:<br/><i id="userPub"></i></p>
+
+  <h2>Set GDPR PubSub</h2>
+  Data Type : <input id="gdprType" type="text" value="TT"></input> <br/>
+  <input id='setGdprPubSub' type="button" value="setGdprPubSub"/> <br/>
 
   <h2>Assign User Role</h2>
   Role : <input id="userRole" type="text" value="temp"></input> <br/>
@@ -160,15 +164,40 @@ $('#loadDevicePub').on('click', async function(e){
 // CLAIM DEVICE
 $('#claim').on('click', async function(e){
   e.preventDefault();
-  await ClaimDevice($('#serviceProvPub').val(), $('#devicePub').val(), device.alias, $('#devicePac').val(), user.is.pub, $('#mobileId').val());
+  await ClaimDevice(
+    $('#serviceProvPub').val(), 
+    $('#devicePub').val(), 
+    device.alias, 
+    $('#devicePac').val(), 
+    user.is.pub, 
+    $('#mobileId').val()
+  );
 })
 
 // BURN KEY (open/close)
 $('#burnkey').on('click', async function(e){
   e.preventDefault();
-  // Pub/Sub to ServiceProviders
-  BurnKey($('#serviceProvPub').val(), device.alias, $('#devicePub').val(), user.is.pub, $('#mobileId').val(), $('#keytoburn').val());
+  BurnKey(
+    $('#serviceProvPub').val(), 
+    device.alias, $('#devicePub').val(), 
+    user.is.pub, 
+    $('#mobileId').val(), 
+    $('#keytoburn').val()
+  );
 })
+
+// SET GDPR PUBSUB
+$('#setGdprPubSub').on('click', async function(e){
+  e.preventDefault();
+  SetGdprPubSub(
+    $('#serviceProvPub').val(), 
+    device.alias, 
+    $('#devicePub').val(), 
+    $('#serviceProvPub').val(), 
+    $('#gdprType').val()
+  );
+})
+
 
 // ASSIGN USERROLE
 $('#assignUserRole').on('click', async function(e){
@@ -189,7 +218,12 @@ $('#assignUserRole').on('click', async function(e){
 // REMOVE USERROLE
 $('#removeUserRole').on('click', async function(e){
   e.preventDefault();
-  RemoveUserRole($('#serviceProvPub').val(), device.alias, $('#devicePac').val(), $('#to').val());
+  RemoveUserRole(
+    $('#serviceProvPub').val(), 
+    device.alias, 
+    $('#devicePac').val(), 
+    $('#to').val()
+  );
 })
 
 // ADD DEVICE
