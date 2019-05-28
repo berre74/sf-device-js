@@ -25,13 +25,13 @@
 
   <h2>Device</h2>
   Device Id  : <i id="deviceId"></i><br/>
-  Device Pub : <input id="devicePub" value="P77lHPibkrCuVmpECUZa8RdgNjNkQK8FU6vAJiCH-OM.HMX0JVthhkxPAPCyxmqyjEPzVSzBni5uJwrJ7hT4s0Y"/> <br/>
+  Device Pub : <input id="devicePub" value="pPZicu6BawraWEEeV2kiy6DJTYFWM26Mdyg96tZzgHM.4X0T0jDAr1x07QfRtKgZL2cCOrbQFFjWqighzX0zGr8"/> <br/>
   Device PAC : <input id="devicePac" value=""/> <br/>
   <input id="loadDevicePub" type="button" value="1. Load Device"/> <br/>
   <input id="claim" type="button" value="2. Claim"/> <br/>
 
   <h2>Burn Key</h2>
-  ServiceProvider Id (sp/sp): <input id="serviceProvPub" type="text" value="2BXUxhhr6zgYAhpPUaY7anKrgVAkhn-KW0OtwLK6cb0.EZM_RdQnzut8-sOIMZIDsCYAvo5wLsR9zmoI6Yavmws"></input> <br/>
+  ServiceProvider Id (sp/sp): <input id="serviceProvPub" type="text" value="NVhsVvhJ2xYGH_jHIHqqnCd76uLVJ1FoaXVf0cCHSnk.Eq2pOob2A6hCEiJYM6QahzF3a3zVCF3yMXTREJZCNbU"></input> <br/>
   Mobile Id : <input id="mobileId" type="text" value="mobile01"></input> <br/>
   Key Index : <input id="keytoburn" type="text" value="1"/> <br/>
   <input id='burnkey' type="button" value="3. Burn Key"/> <br/>
@@ -65,12 +65,21 @@
 <script src="./scripts/sf.js"></script>
 <script>
 
+// CONNECT
 $('#connect').on('click', function(e){
   e.preventDefault();
   var url = connectGun($('#relaynode').val(), $('#port').val());
   $('#relaynodeurl').text(url);
+
+  //TODO: load sf-private sp list
+
+  //TODO: load sf-private vendor list
+
+  //TODO: onselect: load sf-private device list of vendor
+
 })
 
+// SIGN-UP
 $('#up').on('click', function(){
   var url = connectGun($('#relaynode').val(), $('#port').val());
   $('#relaynodeurl').text(url);
@@ -85,6 +94,7 @@ $('#up').on('click', function(){
   user.create($('#alias').val(), $('#pass').val(), login);
 });
 
+// SIGN-IN
 $('#sign').on('submit', login);
 function login(){
   var url = connectGun($('#relaynode').val(), $('#port').val());
@@ -193,7 +203,7 @@ $('#setGdprPubSub').on('click', async function(e){
     $('#serviceProvPub').val(), 
     device.alias, 
     $('#devicePub').val(), 
-    $('#serviceProvPub').val(), 
+    $('#to').val(), 
     $('#gdprType').val()
   );
 })
