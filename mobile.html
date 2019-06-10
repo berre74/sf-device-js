@@ -25,17 +25,19 @@
 
   <h2>Device</h2>
   Device Id  : <i id="deviceId"></i><br/>
-  Device Pub : <input id="devicePub" value="Ty2R0nonfhNrEd9dQYyiqbO2T7ZOVwrQF_lRjrJbCj4.lEsTjxjcP0tGpvM5kTeCpYRKF6CvXDu3VEGJJKXp5Mk"/> <br/>
+  Device Pub : <input id="devicePub" value="6ZIpp2ofamK5cz8USjH_XgLxDJZojzfcfb4EYCueUBM.Be8dvDOMXhfa0Mgs0SattHiko6udQbZfp0RaxSrFdeY"/> <br/>
   Device PAC : <input id="devicePac" value=""/> <br/>
   <input id="loadDevicePub" type="button" value="1. Load Device"/> <br/>
   <input id="claim" type="button" value="2. Claim"/> <br/>
 
   <h2>Burn Key</h2>
-  ServiceProvider Id (sp/sp): <input id="serviceProvPub" type="text" value="lD7OeHmsh3hudo34PkumMEVpW6fU9o4NPeVPw8h2PUE.6bdRtXHyQH1cCSAJIr03kLLYSORn2z8KjxkiALQCOj4"></input> <br/>
+  ServiceProvider Id (sp/sp): <input id="serviceProvPub" type="text" value="5vJuMxnsDXR5S69cC2RTHmPW3bm7bklubbKAEQsL8jI.h_A1Ev8SD1juCJVrmb0Weoix8Tq-uQrGqhujS-9S0ec"></input> <br/>
   Mobile Id : <input id="mobileId" type="text" value="mobile01"></input> <br/>
   Key Index : <input id="keytoburn" type="text" value="1"/> <br/>
-  <input id='burnkey' type="button" value="3. Burn Key"/> <br/>
-  
+  <input id='burnkey' type="button" value="3. Burn Key"/> <br/>  
+  <input id='openconnected' type="button" value="4a. Open Connected"/> <br/>
+  <input id='closeconnected' type="button" value="4b. Close Connected"/> <br/>
+
   <h2>Private Messenger</h2>
   From: <b id="from"></b><br/>
   To: <input id="to" placeholder="public key"> (<b id="who"></b>)<br/>
@@ -184,10 +186,37 @@ $('#claim').on('click', async function(e){
   );
 })
 
-// BURN KEY (open/close)
+// BURN KEY (open/close disconnected device)
 $('#burnkey').on('click', async function(e){
   e.preventDefault();
   BurnKey(
+    'BurnedKey',
+    $('#serviceProvPub').val(), 
+    device.alias, $('#devicePub').val(), 
+    user.is.pub, 
+    $('#mobileId').val(), 
+    $('#keytoburn').val()
+  );
+})
+
+// OPEN connected device
+$('#openconnected').on('click', async function(e){
+  e.preventDefault();
+  BurnKey(
+    'Open', 
+    $('#serviceProvPub').val(), 
+    device.alias, $('#devicePub').val(), 
+    user.is.pub, 
+    $('#mobileId').val(), 
+    $('#keytoburn').val()
+  );
+})
+
+// CLOSE connected device
+$('#closeconnected').on('click', async function(e){
+  e.preventDefault();
+  BurnKey(
+    'Close', 
     $('#serviceProvPub').val(), 
     device.alias, $('#devicePub').val(), 
     user.is.pub, 

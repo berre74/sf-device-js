@@ -94,7 +94,7 @@ Gun.on('opt', function (ctx) {
 
   }
   
-  async function BurnKey(serviceProvPub, deviceId, devicePub, userPub, mobileId, index){
+  async function BurnKey(action, serviceProvPub, deviceId, devicePub, userPub, mobileId, index){
 
     try {
       
@@ -115,7 +115,7 @@ Gun.on('opt', function (ctx) {
       log('Opening device with decrypted key: ' + JSON.stringify(keyToBurn));
 
       // create burnedKey message
-      var burnedKey = { gdprDataType: 'BurnedKey', deviceId: deviceId.alias, devicePub: deviceId.pub, userPub: userPub, mobileId: mobileId, index: index, keyToBurn: keyToBurn}
+      var burnedKey = { gdprDataType: action, deviceId: deviceId.alias, devicePub: deviceId.pub, userPub: userPub, mobileId: mobileId, index: index, keyToBurn: keyToBurn}
       log('Saving & Sending Burned Key ' + JSON.stringify(burnedKey) + ' from ' + userPub + ' for serviceProvPub ' + serviceProvPub);
 
       // encode burnedKey
