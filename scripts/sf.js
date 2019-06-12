@@ -220,6 +220,18 @@ const ListenForNewPac = async function(devicePub, userPub){
       else log('encrypted SfinxKey REMOVED from ' + slot);
     });
   }  
+
+  // wait for RealTimeFeedback
+  for (let index = 0; index < 5; index++) {
+    dev.get(userPub).get('mobile01').get('FeedbackKey_' + index).on(async function(feedbackData, slot){
+      if(feedbackData) {
+        log('New FeedbackKey received in ' + slot);
+        alert('Feedback received from Key ' + slot + ' : ' + JSON.stringify(feedbackData));
+      }
+      else log('FeedbackKey REMOVED from ' + slot);
+    });
+  }  
+
 }
 
 /*
