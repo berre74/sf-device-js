@@ -169,7 +169,7 @@ $('#loadDevicePub').on('click', async function(e){
   log('Found DeviceId : ' + device.alias);
   $('#deviceId').text(device.alias);
 
-  ListenForNewPac(devicePub, user.is.pub);
+  ListenToGun(devicePub, user.is.pub);
 
 })
 
@@ -268,7 +268,7 @@ $('#removeUserRole').on('click', async function(e){
 // ADD DEVICE
 $('#addDevice').on('click', async function(e){
   e.preventDefault();
-  ListenForNewPac($('#devicePub').val(), user.is.pub);
+  ListenToGun($('#devicePub').val(), user.is.pub);
 })
 
 </script>
