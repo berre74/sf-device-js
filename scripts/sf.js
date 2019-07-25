@@ -81,9 +81,13 @@ async function ClaimDevice(serviceProvPub, devicePub, deviceId, devicePac, userP
     // put claim on user profile
     var claim = {  gdprDataType: 'Claim', mobileId: mobileId, deviceId: deviceId, devicePac: devicePac }
     log('Put enClaim on user');
-    var sec = await Gun.SEA.secret(device.epub, user.pair()); // Diffie-Hellman
+    //var sec = await Gun.SEA.secret(device.epub, user.pair()); // Diffie-Hellman
+    var serviceProv = await gun.user(serviceProvPub).then();
+
+    var sec = await Gun.SEA.secret(serviceProv.epub, user.pair()); // Diffie-Hellman
     var encClaim = await Gun.SEA.encrypt(claim, sec);
-    user.get(serviceProvPub).get(deviceId).put(encClaim); 
+    
+    user.get(serviceProvPub).put(encClaim); 
 
     log('ClaimDevice sent ');
 
@@ -103,9 +107,11 @@ async function BurnKey(action, serviceProvPub, deviceId, devicePub, userPub, mob
     var deviceId = await device.then();
     log('DeviceId loaded : ' + deviceId.alias);
     
+    // 1 get Key from Gun Device-node
     var encKey = await device.get(userPub).get(mobileId).get('Key_' + index).once();
-    //log('Opening device with encKey: ' + JSON.stringify(encKey));
 
+    // 2 use Key with lock via BLE
+    //log('Opening device with encKey: ' + JSON.stringify(encKey));
     var sec = await Gun.SEA.secret(deviceId.epub, user.pair()); // Diffie-Hellman
     var keyToBurn = await Gun.SEA.decrypt(encKey, sec);
     if(!keyToBurn) {
@@ -114,15 +120,18 @@ async function BurnKey(action, serviceProvPub, deviceId, devicePub, userPub, mob
     }
     log('Opening device with decrypted key: ' + JSON.stringify(keyToBurn));
 
+    // 3 send back used Key to Gun Vendor-Node
     // create burnedKey message
     var burnedKey = { gdprDataType: action, deviceId: deviceId.alias, devicePub: deviceId.pub, userPub: userPub, mobileId: mobileId, index: index, keyToBurn: keyToBurn}
     log('Saving & Sending Burned Key ' + JSON.stringify(burnedKey) + ' from ' + userPub + ' for serviceProvPub ' + serviceProvPub);
 
     // encode burnedKey
-    var sec = await Gun.SEA.secret(deviceId.epub, user.pair()); // Diffie-Hellman
+    var serviceProv = await gun.user(serviceProvPub).then();
+    var sec = await Gun.SEA.secret(serviceProv.epub, user.pair()); // Diffie-Hellman
     var encBurnedKey = await Gun.SEA.encrypt(burnedKey, sec);
+
     //save burnedKey in SEA user profile
-    user.get(serviceProvPub).get(deviceId.alias).put(encBurnedKey); 
+    user.get(serviceProvPub).put(encBurnedKey); 
 
     log('BurnedKey saved successfully');      
   } 
@@ -144,7 +153,8 @@ async function SetGdprPubSub(serviceProvPub, deviceId, devicePub,
     log('Put gdprPubSub on user');
     var sec = await Gun.SEA.secret(device.epub, user.pair()); // Diffie-Hellman
     var encGdprPubSub = await Gun.SEA.encrypt(gdprPubSub, sec);
-    user.get(serviceProvPub).get(deviceId).put(encGdprPubSub); 
+
+    user.get(serviceProvPub).put(encGdprPubSub); 
 
     log('gdprPubSub sent');
 
@@ -166,9 +176,11 @@ async function AssignUserRole(serviceProvPub, deviceId, devicePub, userPub, mobi
     from: from, to: to }
   
     log('Put encUserRole on user');
-    var sec = await Gun.SEA.secret(device.epub, user.pair()); // Diffie-Hellman
+    var serviceProv = await gun.user(serviceProvPub).then();
+    var sec = await Gun.SEA.secret(serviceProv.epub, user.pair()); // Diffie-Hellman
     var encUserRole = await Gun.SEA.encrypt(userRole, sec);
-    user.get(serviceProvPub).get(deviceId).put(encUserRole); 
+
+    user.get(serviceProvPub).put(encUserRole); 
 
     log('AssignUserRole sent');
 
@@ -178,17 +190,19 @@ async function AssignUserRole(serviceProvPub, deviceId, devicePub, userPub, mobi
 
 }
 
-async function RemoveUserRole(serviceProvPub, deviceId, devicePac, toUserPub){
+async function RemoveUserRole(serviceProvPub, deviceId, toUserPub){
   try {
 
     var userRole = { gdprDataType: 'AssignUserRole', 
-    deviceId: deviceId, devicePac: devicePac, 
+    deviceId: deviceId, 
     toUserPub: toUserPub, userRole: 'del'}
 
     log('Put encUserRole on user');
-    var sec = await Gun.SEA.secret(device.epub, user.pair()); // Diffie-Hellman
+    var serviceProv = await gun.user(serviceProvPub).then();
+    var sec = await Gun.SEA.secret(serviceProv.epub, user.pair()); // Diffie-Hellman
     var encUserRole = await Gun.SEA.encrypt(userRole, sec);
-    user.get(serviceProvPub).get(deviceId).put(encUserRole); 
+
+    user.get(serviceProvPub).put(encUserRole); 
 
     log('RemoveUserRole sent');
     
@@ -197,16 +211,23 @@ async function RemoveUserRole(serviceProvPub, deviceId, devicePac, toUserPub){
   }
 }
 
-const ListenToGun = async function(devicePub, userPub){
+const ListenToGun = async function(serviceProvPub, devicePub, userPub){
+
+  // load vendor
+  var vend = gun.user(serviceProvPub);
+  var vendId = await vend.then();
+  log('vendorId loaded: ' + vendId.alias);
 
   // load device
   var dev = gun.user(devicePub);
   var devId = await dev.then();
-  log('deviceId loaded : ' + devId.alias);
+  log('deviceId loaded: ' + devId.alias);
+
 
   // wait for new PAC
   dev.get(userPub).get('PAC').on(async function(encPAC){
-    var sec = await Gun.SEA.secret(devId.epub, user.pair()); // Diffie-Hellman
+    //var sec = await Gun.SEA.secret(devId.epub, user.pair()); // Diffie-Hellman
+    var sec = await Gun.SEA.secret(vendId.epub, user.pair()); // Diffie-Hellman
     var newPAC = await Gun.SEA.decrypt(encPAC, sec);
     if(newPAC)log('Received new PAC: ' + newPAC)
     else log('No PAC received');
@@ -236,8 +257,8 @@ const ListenToGun = async function(devicePub, userPub){
   // wait for Actions to sign
   dev.get(userPub).get('Cloud').get('Action').on(async function(actionData, index){
     log('Action data received from cloud: ' + JSON.stringify(actionData));
-    actionData.mobileId = 'mobile01';
-    actionData.index = 4;
+    actionData.mobileId = 'mobile01'; //TODO: retrieve this mobileId
+    actionData.index = 0; //TODO: choose an key slot with non-burnedkey
     BurnKey(actionData.action, actionData.serviceProvPub, actionData.deviceId, actionData.devicePub, actionData.userPub, actionData.mobileId, actionData.index);
   });
 

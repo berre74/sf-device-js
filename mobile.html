@@ -1,7 +1,7 @@
 <h1>Sfinx ÐApp - TestPage</h1>
 
 <form id="sign">
-  <input id="relaynode" placeholder="relay node" value="http://137.117.197.174"> : 
+  <input id="relaynode" placeholder="relay node" value="http://localhost"> : 
   <select name="port" id="port">
     <option value="all">--All Peers--</option>
     <option value="8763">8763</option>
@@ -25,13 +25,14 @@
 
   <h2>Device</h2>
   Device Id  : <i id="deviceId"></i><br/>
-  Device Pub : <input id="devicePub" value="6ZIpp2ofamK5cz8USjH_XgLxDJZojzfcfb4EYCueUBM.Be8dvDOMXhfa0Mgs0SattHiko6udQbZfp0RaxSrFdeY"/> <br/>
+  Device Pub : <input id="devicePub" value="3LAcWSMkfeUEtqy2rPgJfqQsqaOeyzwDezseKWPVj-Y.0lpNpECdmOrSL9HVEug58_wuzYFMA1RFH0ULqZCuJG4"/> <br/>
   Device PAC : <input id="devicePac" value=""/> <br/>
   <input id="loadDevicePub" type="button" value="1. Load Device"/> <br/>
   <input id="claim" type="button" value="2. Claim"/> <br/>
 
   <h2>Burn Key</h2>
-  ServiceProvider Id (sp/sp): <input id="serviceProvPub" type="text" value="5vJuMxnsDXR5S69cC2RTHmPW3bm7bklubbKAEQsL8jI.h_A1Ev8SD1juCJVrmb0Weoix8Tq-uQrGqhujS-9S0ec"></input> <br/>
+  ServiceProvider Id (sp/sp): <input id="serviceProvPub" type="text" 
+  value="Zpf53qcgwZfBx_LrWdXXl07C7F0-UqsXm2iKYlXiRCk.C9LCWuxPRaUU1HjzNCpgw3jWnceQfi5jgSPGCyoMkvI"></input> <br/>
   Mobile Id : <input id="mobileId" type="text" value="mobile01"></input> <br/>
   Key Index : <input id="keytoburn" type="text" value="1"/> <br/>
   <input id='burnkey' type="button" value="3. Burn Key"/> <br/>  
@@ -169,7 +170,7 @@ $('#loadDevicePub').on('click', async function(e){
   log('Found DeviceId : ' + device.alias);
   $('#deviceId').text(device.alias);
 
-  ListenToGun(devicePub, user.is.pub);
+  ListenToGun($('#serviceProvPub').val(), devicePub, user.is.pub);
 
 })
 
@@ -260,7 +261,6 @@ $('#removeUserRole').on('click', async function(e){
   RemoveUserRole(
     $('#serviceProvPub').val(), 
     device.alias, 
-    $('#devicePac').val(), 
     $('#to').val()
   );
 })
@@ -268,7 +268,7 @@ $('#removeUserRole').on('click', async function(e){
 // ADD DEVICE
 $('#addDevice').on('click', async function(e){
   e.preventDefault();
-  ListenToGun($('#devicePub').val(), user.is.pub);
+  ListenToGun($('#serviceProvPub').val(), $('#devicePub').val(), user.is.pub);
 })
 
 </script>
