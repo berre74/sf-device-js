@@ -99,7 +99,6 @@ async function ClaimDevice(serviceProvPub, devicePub, deviceId, devicePac, userP
 }
 
 async function BurnKey(action, serviceProvPub, deviceId, devicePub, userPub, mobileId, index){
-
   try {
     
     //Retrieve key to Open/Close from device
@@ -133,7 +132,9 @@ async function BurnKey(action, serviceProvPub, deviceId, devicePub, userPub, mob
     //save burnedKey in SEA user profile
     user.get(serviceProvPub).put(encBurnedKey); 
 
-    log('BurnedKey saved successfully');      
+    var ret = 'BurnedKey ' + index + ' saved successfully';
+    log(ret);   
+    return ret;   
   } 
   catch (error) {
     console.error('Failed to save BurnedKey: ' + error);      
@@ -235,9 +236,12 @@ const ListenToGun = async function(serviceProvPub, devicePub, userPub){
   });
 
   // wait for new sfinxKeys
+  var mobileId = 'mobile01';
   for (let index = 0; index < 5; index++) {
-    dev.get(userPub).get('mobile01').get('Key_' + index).on(async function(encSfinxKey, slot){
-      if(encSfinxKey) log('New encrypted SfinxKey received in ' + slot);
+    dev.get(userPub).get(mobileId).get('Key_' + index).on(async function(encSfinxKey, slot){
+      if(encSfinxKey) {
+        log('New encrypted SfinxKey received in ' + slot + ' on ' + mobileId);
+      }
       else log('encrypted SfinxKey REMOVED from ' + slot);
     });
   }  

@@ -25,14 +25,15 @@
 
   <h2>Device</h2>
   Device Id  : <i id="deviceId"></i><br/>
-  Device Pub : <input id="devicePub" value="3LAcWSMkfeUEtqy2rPgJfqQsqaOeyzwDezseKWPVj-Y.0lpNpECdmOrSL9HVEug58_wuzYFMA1RFH0ULqZCuJG4"/> <br/>
+  Device Pub : <input id="devicePub" 
+   value="ui4NXzK9SLpfwElobmp9Tge0S6LesT6DaLPrT59a8as.BqBWO4c4XqbPokSxdROgWwuwDQS3bj6uV2GfiVgKhEY"/> <br/>
   Device PAC : <input id="devicePac" value=""/> <br/>
   <input id="loadDevicePub" type="button" value="1. Load Device"/> <br/>
   <input id="claim" type="button" value="2. Claim"/> <br/>
 
   <h2>Burn Key</h2>
   ServiceProvider Id (sp/sp): <input id="serviceProvPub" type="text" 
-  value="Zpf53qcgwZfBx_LrWdXXl07C7F0-UqsXm2iKYlXiRCk.C9LCWuxPRaUU1HjzNCpgw3jWnceQfi5jgSPGCyoMkvI"></input> <br/>
+   value="Zpf53qcgwZfBx_LrWdXXl07C7F0-UqsXm2iKYlXiRCk.C9LCWuxPRaUU1HjzNCpgw3jWnceQfi5jgSPGCyoMkvI"></input> <br/>
   Mobile Id : <input id="mobileId" type="text" value="mobile01"></input> <br/>
   Key Index : <input id="keytoburn" type="text" value="1"/> <br/>
   <input id='burnkey' type="button" value="3. Burn Key"/> <br/>  
@@ -115,6 +116,8 @@ async function showPub(data){
 
     log('User '+user.is.alias+' authorized with pub ' + user.is.pub);
     $('#userPub').text(user.is.pub);
+
+    if(init)if(init.devicePub) autoplay();
   }
 
 // CHAT to
@@ -270,5 +273,94 @@ $('#addDevice').on('click', async function(e){
   e.preventDefault();
   ListenToGun($('#serviceProvPub').val(), $('#devicePub').val(), user.is.pub);
 })
+
+// AUTOPLAY
+var init;
+
+async function autoplay(){
+
+    // load device
+    device = await gun.user(init.devicePub).then();
+    userPub = $('#userPub').text();
+    $('#deviceId').text(device.alias);
+    ListenToGun(init.serviceProvPub, init.devicePub, userPub);
+
+    // claim
+    if(init.PAC){
+      console.log(userPub + ' claiming device ' + device.alias + ' with PAC ' + init.PAC + ' and ' + init.mobileId)
+      await ClaimDevice(
+        init.serviceProvPub, 
+        init.devicePub, 
+        device.alias, 
+        init.PAC, 
+        userPub, 
+        init.mobileId
+      );
+    }
+
+  }
+
+async function remoteAssignUserRights(toUserPub, userRole){
+  try {
+    await AssignUserRole(
+      init.serviceProvPub, 
+      device.alias, 
+      init.devicePub, 
+      userPub, 
+      mobileId, 
+      'pac', 
+      toUserPub, 
+      userRole,
+      'from',
+      'to'
+    );
+    return 'Assigned ' + userRole + ' rights on ' + device.alias + ' assigned to ' + toUserPub;    
+  } catch (error) {
+    return 'remoteAssignUserRights error: ' + error;
+  }
+}
+
+  async function remoteBurnKey(mobileId, index){
+    try {
+      await BurnKey(
+          'BurnedKey',
+          init.serviceProvPub, 
+          device.alias, init.devicePub, 
+          userPub, 
+          mobileId, 
+          index
+        );       
+        return 'BurnedKey for deviceId ' + device.alias + ' with ' + mobileId + ' key ' + index + ' of user ' + userPub;      
+    } catch (error) {
+      return 'BurnedKey error: ' + error;
+    }
+  }
+
+
+$(document).ready(function() {
+  var qs = window.location.search.replace('?', '');
+  if(qs){
+    var params = qs.split('&');
+    init = {};
+    for (let index = 0; index < params.length; index++) {
+      const param = params[index];
+      init[param.split('=')[0]] = param.split('=')[1];
+    }
+    
+    console.log('Autoplay init: ' + JSON.stringify(init));
+
+    // connect & log in
+    var url = connectGun($('#relaynode').val(), $('#port').val());
+    $('#relaynodeurl').text(url);
+    $('#alias').val(init.user);
+    $('#pass').val(init.key);
+    user.create(init.user, init.key, login);
+    
+  }
+
+});
+
+
+
 
 </script>
