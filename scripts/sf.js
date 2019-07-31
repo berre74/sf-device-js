@@ -113,7 +113,7 @@ async function BurnKey(action, serviceProvPub, deviceId, devicePub, userPub, mob
     //var sec = await Gun.SEA.secret(deviceId.epub, user.pair()); // Diffie-Hellman
     var keyToBurn = await Gun.SEA.decrypt(encKey, sec);
     if(!keyToBurn) {
-      alert('No key found on ' + mobileId + ' on key index ' + index);
+      //alert('No key found on ' + mobileId + ' on key index ' + index);
       throw 'No Key';
     }
     log('Opening device with decrypted key: ' + JSON.stringify(keyToBurn));
@@ -247,9 +247,7 @@ const ListenToGun = async function(serviceProvPub, devicePub, userPub){
 
 
   // wait for new PAC
-  //dev.get(userPub).get('PAC').on(async function(encPAC){
   vend.get(userPub).get(devicePub).get('PAC').on(async function(encPAC){
-    //var sec = await Gun.SEA.secret(devId.epub, user.pair()); // Diffie-Hellman
     var sec = await Gun.SEA.secret(vendId.epub, user.pair()); // Diffie-Hellman
     var newPAC = await Gun.SEA.decrypt(encPAC, sec);
     if(newPAC)log('Received new PAC: ' + newPAC)
@@ -260,7 +258,6 @@ const ListenToGun = async function(serviceProvPub, devicePub, userPub){
   // wait for new sfinxKeys
   var mobileId = 'mobile01';
   for (let index = 0; index < 5; index++) {
-    //dev.get(userPub).get(mobileId).get('Key_' + index).on(async function(encSfinxKey, slot){
     vend.get(userPub).get(devicePub).get(mobileId).get('Key_' + index).on(async function(encSfinxKey, slot){
       if(encSfinxKey) {
         log('New encrypted SfinxKey received in ' + slot + ' on ' + mobileId);
@@ -271,8 +268,7 @@ const ListenToGun = async function(serviceProvPub, devicePub, userPub){
 
   // wait for RealTimeFeedback
   for (let index = 0; index < 5; index++) {
-    //dev.get(userPub).get('mobile01').get('FeedbackKey_' + index).on(async function(feedbackData, slot){
-    vend.get(userPub).get(devicePub).get('mobile01').get('FeedbackKey_' + index).on(async function(feedbackData, slot){
+    vend.get(userPub).get(devicePub).get(mobileId).get('FeedbackKey_' + index).on(async function(feedbackData, slot){
       if(feedbackData) {
         var fb = 'Feedback received in Key_' + slot + ': ' + JSON.stringify(feedbackData);
         log(fb);

@@ -26,7 +26,7 @@
   <h2>Device</h2>
   Device Id  : <i id="deviceId"></i><br/>
   Device Pub : <input id="devicePub" 
-   value="ui4NXzK9SLpfwElobmp9Tge0S6LesT6DaLPrT59a8as.BqBWO4c4XqbPokSxdROgWwuwDQS3bj6uV2GfiVgKhEY"/> <br/>
+   value="iQrPsiAzM2vYe0aMsiLtY6loiLr_zB3SApIMVRLUu3c.9YrY7dq4KCRbC-RE92t2jJ2lR4xuwDoF0RfSdMuP824"/> <br/>
   Device PAC : <input id="devicePac" value=""/> <br/>
   <input id="loadDevicePub" type="button" value="1. Load Device"/> <br/>
   <input id="claim" type="button" value="2. Claim"/> <br/>
@@ -114,7 +114,7 @@ async function showPub(data){
     $('#sign').hide();
     $('#talk').show();
 
-    log('User '+user.is.alias+' authorized with pub ' + user.is.pub);
+    log('User ' + user.is.alias + ' authorized with pub ' + user.is.pub);
     $('#userPub').text(user.is.pub);
 
     if(init)if(init.devicePub) autoplay();
