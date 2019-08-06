@@ -2,8 +2,6 @@ var gun;
 var user;
 var device;
 
-const gunOverPublic = true;
-
 function log(msg){
     console.log((new Date()).toUTCString() + ' : ' + msg)
 }
@@ -59,29 +57,16 @@ async function ClaimDevice(serviceProvPub, devicePub, deviceId, devicePac, userP
 
   try {
 
-    // put notif on gun (GdprData/serviceProvPub)
-    if(!gunOverPublic){
-      log('Put shareNotif on gun');
-      var shareNotif = { userPub: userPub, gdprDataType: 'Claim', deviceId: deviceId }
-      gun.get('GdprData').get(serviceProvPub).put(shareNotif);  
-    }
-
     // put claim on user profile
     var claim = {  gdprDataType: 'Claim', mobileId: mobileId, deviceId: deviceId, devicePac: devicePac }
     var serviceProv = await gun.user(serviceProvPub).then();
     var sec = await Gun.SEA.secret(serviceProv.epub, user.pair()); // Diffie-Hellman
     var encClaim = await Gun.SEA.encrypt(claim, sec);  
-    if(gunOverPublic){
-      log('Put enClaim on public gun');
-      var gdprData = { pub: user.is.pub, epub: user.is.epub, data: encClaim.substring(3, encClaim.length) }  
-      gun.get('GdprData').get(serviceProvPub).put(gdprData); 
-    }
-    else {
-      log('Put enClaim on private gun user');
-      user.get(serviceProvPub).put(encClaim);   
-    }
 
-    log('ClaimDevice sent ');
+    var gdprData = { pub: user.is.pub, epub: user.is.epub, data: encClaim.substring(3, encClaim.length) }  
+    gun.get('GdprData').get(serviceProvPub).put(gdprData); 
+
+    log('ClaimDevice sent to ' + serviceProvPub);
 
   } catch (error) {
     log('ClaimDevice failed: ' + error)
@@ -128,14 +113,8 @@ async function BurnKey(action, serviceProvPub, deviceId, devicePub, userPub, mob
     var sec = await Gun.SEA.secret(serviceProv.epub, user.pair()); // Diffie-Hellman
     var encBurnedKey = await Gun.SEA.encrypt(burnedKey, sec);
 
-    if(gunOverPublic){
-      var gdprData = { pub: user.is.pub, epub: user.is.epub, data: encBurnedKey.substring(3, encBurnedKey.length) }  
-      gun.get('GdprData').get(serviceProvPub).put(gdprData);
-    }
-    else{
-      //save burnedKey in SEA user profile
-      user.get(serviceProvPub).put(encBurnedKey); 
-    }
+    var gdprData = { pub: user.is.pub, epub: user.is.epub, data: encBurnedKey.substring(3, encBurnedKey.length) }  
+    gun.get('GdprData').get(serviceProvPub).put(gdprData);
 
     var ret = 'BurnedKey ' + index + ' saved successfully';
     log(ret);   
@@ -159,13 +138,8 @@ async function SetGdprPubSub(serviceProvPub, deviceId, devicePub,
     var sec = await Gun.SEA.secret(device.epub, user.pair()); // Diffie-Hellman
     var encGdprPubSub = await Gun.SEA.encrypt(gdprPubSub, sec);
 
-    if(gunOverPublic){
-      var gdprData = { pub: user.is.pub, epub: user.is.epub, data: encGdprPubSub.substring(3, encGdprPubSub.length) }  
-      gun.get('GdprData').get(serviceProvPub).put(gdprData);
-    }
-    else{
-      user.get(serviceProvPub).put(encGdprPubSub); 
-    }
+    var gdprData = { pub: user.is.pub, epub: user.is.epub, data: encGdprPubSub.substring(3, encGdprPubSub.length) }  
+    gun.get('GdprData').get(serviceProvPub).put(gdprData);
 
     log('gdprPubSub sent');
 
@@ -190,13 +164,8 @@ async function AssignUserRole(serviceProvPub, deviceId, devicePub, userPub, mobi
     var sec = await Gun.SEA.secret(serviceProv.epub, user.pair()); // Diffie-Hellman
     var encUserRole = await Gun.SEA.encrypt(userRole, sec);
 
-    if(gunOverPublic){
-      var gdprData = { pub: user.is.pub, epub: user.is.epub, data: encUserRole.substring(3, encUserRole.length) }  
-      gun.get('GdprData').get(serviceProvPub).put(gdprData);
-    }
-    else{
-      user.get(serviceProvPub).put(encUserRole); 
-    }
+    var gdprData = { pub: user.is.pub, epub: user.is.epub, data: encUserRole.substring(3, encUserRole.length) }  
+    gun.get('GdprData').get(serviceProvPub).put(gdprData);
 
     log('AssignUserRole sent');
 
@@ -218,13 +187,8 @@ async function RemoveUserRole(serviceProvPub, deviceId, toUserPub){
     var sec = await Gun.SEA.secret(serviceProv.epub, user.pair()); // Diffie-Hellman
     var encUserRole = await Gun.SEA.encrypt(userRole, sec);
 
-    if(gunOverPublic){
-      var gdprData = { pub: user.is.pub, epub: user.is.epub, data: encUserRole.substring(3, encUserRole.length) }  
-      gun.get('GdprData').get(serviceProvPub).put(gdprData);
-    }
-    else{
-      user.get(serviceProvPub).put(encUserRole); 
-    }
+    var gdprData = { pub: user.is.pub, epub: user.is.epub, data: encUserRole.substring(3, encUserRole.length) }  
+    gun.get('GdprData').get(serviceProvPub).put(gdprData);
 
     log('RemoveUserRole sent');
     
