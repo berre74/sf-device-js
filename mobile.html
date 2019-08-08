@@ -1,7 +1,7 @@
 <h1>Sfinx ÐApp - TestPage</h1>
 
 <form id="sign">
-  <input id="relaynode" placeholder="relay node" value="http://137.117.197.174"> : 
+  <input id="relaynode" placeholder="relay node" value="http://localhost"> : 
   <select name="port" id="port">
     <option value="all">--All Peers--</option>
     <option value="8763">8763</option>
@@ -11,8 +11,8 @@
   </select>
   <input id="connect" type="button" value="connect">
   <br/>
-  <input id="alias" placeholder="username" value="a1">
-  <input id="pass" type="input" placeholder="passphrase" value="1">
+  <input id="alias" placeholder="username" value="tu_1">
+  <input id="pass" type="input" placeholder="passphrase" value="1234">
   <br/>
   <input id="up" type="button" value="1. sign up">
   <input id="in" type="submit" value="2. sign in">
@@ -25,13 +25,15 @@
 
   <h2>Device</h2>
   Device Id  : <i id="deviceId"></i><br/>
-  Device Pub : <input id="devicePub" value="6ZIpp2ofamK5cz8USjH_XgLxDJZojzfcfb4EYCueUBM.Be8dvDOMXhfa0Mgs0SattHiko6udQbZfp0RaxSrFdeY"/> <br/>
+  Device Pub : <input id="devicePub" 
+   value="CjzImx0MjCMro4zazSpffCG6emIT9Sg8hsLVKsia7Uk.1SF_bDeDGnPwE4IY_VTM5a2dG9GoaJa__tBEDpzjl38"/> <br/>
   Device PAC : <input id="devicePac" value=""/> <br/>
   <input id="loadDevicePub" type="button" value="1. Load Device"/> <br/>
   <input id="claim" type="button" value="2. Claim"/> <br/>
 
   <h2>Burn Key</h2>
-  ServiceProvider Id (sp/sp): <input id="serviceProvPub" type="text" value="5vJuMxnsDXR5S69cC2RTHmPW3bm7bklubbKAEQsL8jI.h_A1Ev8SD1juCJVrmb0Weoix8Tq-uQrGqhujS-9S0ec"></input> <br/>
+  ServiceProvider Id (sp/sp): <input id="serviceProvPub" type="text" 
+   value="x_mqquR1CHoXCDOcCBM2H3M_Xl0ypNkjfsViNdhmhZg.fhnWBpO2C-jOs_rYydWajgZUEd-rrNmGwqoUQTSYPSo"></input> <br/>
   Mobile Id : <input id="mobileId" type="text" value="mobile01"></input> <br/>
   Key Index : <input id="keytoburn" type="text" value="1"/> <br/>
   <input id='burnkey' type="button" value="3. Burn Key"/> <br/>  
@@ -112,8 +114,10 @@ async function showPub(data){
     $('#sign').hide();
     $('#talk').show();
 
-    log('User '+user.is.alias+' authorized with pub ' + user.is.pub);
+    log('User ' + user.is.alias + ' authorized with pub ' + user.is.pub);
     $('#userPub').text(user.is.pub);
+
+    if(init)if(init.devicePub) autoplay();
   }
 
 // CHAT to
@@ -169,7 +173,7 @@ $('#loadDevicePub').on('click', async function(e){
   log('Found DeviceId : ' + device.alias);
   $('#deviceId').text(device.alias);
 
-  ListenToGun(devicePub, user.is.pub);
+  ListenToGun($('#serviceProvPub').val(), devicePub, user.is.pub);
 
 })
 
@@ -237,7 +241,6 @@ $('#setGdprPubSub').on('click', async function(e){
   );
 })
 
-
 // ASSIGN USERROLE
 $('#assignUserRole').on('click', async function(e){
   e.preventDefault();
@@ -260,7 +263,6 @@ $('#removeUserRole').on('click', async function(e){
   RemoveUserRole(
     $('#serviceProvPub').val(), 
     device.alias, 
-    $('#devicePac').val(), 
     $('#to').val()
   );
 })
@@ -268,7 +270,114 @@ $('#removeUserRole').on('click', async function(e){
 // ADD DEVICE
 $('#addDevice').on('click', async function(e){
   e.preventDefault();
-  ListenToGun($('#devicePub').val(), user.is.pub);
+  ListenToGun($('#serviceProvPub').val(), $('#devicePub').val(), user.is.pub);
 })
+
+// AUTOPLAY
+var init;
+
+async function autoplay(){
+
+    // load device
+    device = await gun.user(init.devicePub).then();
+    userPub = $('#userPub').text();
+    $('#deviceId').text(device.alias);
+    $('#devicePub').val(init.devicePub);
+    ListenToGun(init.serviceProvPub, init.devicePub, userPub);
+
+    // claim
+    if(init.PAC){
+      console.log(userPub + ' claiming device ' + device.alias + ' with PAC ' + init.PAC + ' and ' + init.mobileId)
+      await ClaimDevice(
+        init.serviceProvPub, 
+        init.devicePub, 
+        device.alias, 
+        init.PAC, 
+        userPub, 
+        init.mobileId
+      );
+    }
+
+  }
+
+async function remoteAssignUserRights(toUserPub, userRole){
+  try {
+    await AssignUserRole(
+      init.serviceProvPub, 
+      device.alias, 
+      init.devicePub, 
+      userPub, 
+      mobileId, 
+      'pac', 
+      toUserPub, 
+      userRole,
+      'from',
+      'to'
+    );
+    return 'Assigned ' + userRole + ' rights on ' + device.alias + ' assigned to ' + toUserPub;    
+  } catch (error) {
+    return 'remoteAssignUserRights error: ' + error;
+  }
+}
+
+async function remoteLoadDevice(devicePub){
+  device = await gun.user(devicePub).then();
+  if(!device) {
+      var err = 'Device ' + devicePub + ' : Not Found';
+      console.error(err); 
+      return err;
+  }
+  var ret = 'Listening to DeviceId : ' + device.alias;
+  $('#devicePub').val(devicePub);
+  $('#deviceId').text(device.alias);
+
+  ListenToGun($('#serviceProvPub').val(), devicePub, user.is.pub);
+
+  console.log(ret);
+  return ret;
+}
+
+async function remoteBurnKey(mobileId, index){
+    try {
+      await BurnKey(
+          'BurnedKey',
+          init.serviceProvPub, 
+          device.alias, init.devicePub, 
+          userPub, 
+          mobileId, 
+          index
+        );       
+        return 'BurnedKey for deviceId ' + device.alias + ' with ' + mobileId + ' key ' + index + ' of user ' + userPub;      
+    } catch (error) {
+      return 'BurnedKey error: ' + error;
+    }
+  }
+
+
+$(document).ready(function() {
+  var qs = window.location.search.replace('?', '');
+  if(qs){
+    var params = qs.split('&');
+    init = {};
+    for (let index = 0; index < params.length; index++) {
+      const param = params[index];
+      init[param.split('=')[0]] = param.split('=')[1];
+    }
+    
+    console.log('Autoplay init: ' + JSON.stringify(init));
+
+    // connect & log in
+    var url = connectGun($('#relaynode').val(), $('#port').val());
+    $('#relaynodeurl').text(url);
+    $('#alias').val(init.user);
+    $('#pass').val(init.key);
+    user.create(init.user, init.key, login);
+    
+  }
+
+});
+
+
+
 
 </script>
