@@ -282,6 +282,7 @@ async function autoplay(){
     device = await gun.user(init.devicePub).then();
     userPub = $('#userPub').text();
     $('#deviceId').text(device.alias);
+    $('#devicePub').val(init.devicePub);
     ListenToGun(init.serviceProvPub, init.devicePub, userPub);
 
     // claim
@@ -319,7 +320,24 @@ async function remoteAssignUserRights(toUserPub, userRole){
   }
 }
 
-  async function remoteBurnKey(mobileId, index){
+async function remoteLoadDevice(devicePub){
+  device = await gun.user(devicePub).then();
+  if(!device) {
+      var err = 'Device ' + devicePub + ' : Not Found';
+      console.error(err); 
+      return err;
+  }
+  var ret = 'Listening to DeviceId : ' + device.alias;
+  $('#devicePub').val(devicePub);
+  $('#deviceId').text(device.alias);
+
+  ListenToGun($('#serviceProvPub').val(), devicePub, user.is.pub);
+
+  console.log(ret);
+  return ret;
+}
+
+async function remoteBurnKey(mobileId, index){
     try {
       await BurnKey(
           'BurnedKey',
