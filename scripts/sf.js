@@ -135,7 +135,8 @@ async function SetGdprPubSub(serviceProvPub, deviceId, devicePub,
     serviceProvPub: serviceProvPub, devicePub: devicePub, deviceId: deviceId, 
     toServiceProvPub: toServiceProvPub, gdprType: gdprType }
   
-    var sec = await Gun.SEA.secret(device.epub, user.pair()); // Diffie-Hellman
+    var serviceProv = await gun.user(serviceProvPub).then();
+    var sec = await Gun.SEA.secret(serviceProv.epub, user.pair()); // Diffie-Hellman
     var encGdprPubSub = await Gun.SEA.encrypt(gdprPubSub, sec);
 
     var gdprData = { pub: user.is.pub, epub: user.is.epub, data: encGdprPubSub.substring(3, encGdprPubSub.length) }  
